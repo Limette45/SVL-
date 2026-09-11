@@ -59,11 +59,6 @@
         color: white;
     }
 
-    .secondary {
-        background: #ddd;
-        color: #222;
-    }
-
     .button:hover {
         opacity: 0.8;
     }
@@ -98,7 +93,7 @@
     }
 
     .word-card.selected {
-        background: #DDEEFF;
+        background: #DFF3FF;
     }
 
     .next-section {
@@ -125,15 +120,10 @@
     .difficult-word {
         padding: 12px;
         border-bottom: 1px solid #eee;
-        cursor: pointer;
     }
 
     .difficult-word:last-child {
         border-bottom: none;
-    }
-
-    .difficult-word:hover {
-        background: #f5f5f5;
     }
 
     .empty {
@@ -150,6 +140,7 @@
     }
 
     @media (max-width: 600px) {
+
         .words-grid {
             grid-template-columns: 1fr;
         }
@@ -157,6 +148,7 @@
         .word-card {
             font-size: 17px;
         }
+
     }
 </style>
 </head>
@@ -165,14 +157,18 @@
 
 <header>
     <h1>Vocabulary Randomizer</h1>
+
     <div class="subtitle">
         Six random words at a time. Words will not appear again once shown.
     </div>
 </header>
 
+
 <div class="container">
 
+
     <div class="upload-section">
+
         <label for="fileInput" class="button primary">
             Import Vocabulary File
         </label>
@@ -182,15 +178,20 @@
         <div class="hint">
             Your vocabulary is saved in this browser after importing.
         </div>
+
     </div>
+
 
     <div class="status" id="status">
         No vocabulary file loaded.
     </div>
 
+
     <div class="words-grid" id="wordsGrid"></div>
 
+
     <div class="next-section">
+
         <button class="button primary" id="nextButton">
             Show Next 6
         </button>
@@ -198,23 +199,28 @@
         <div class="hint">
             Tap a word to add it to Difficult Words.
         </div>
+
     </div>
+
 
     <div class="difficult-section">
 
         <h2>Difficult Words</h2>
 
         <div class="hint">
-            Tap a word here to remove it from this list.
+            Saved difficult words stay here permanently.
         </div>
 
         <div class="difficult-list" id="difficultList"></div>
 
     </div>
 
+
 </div>
 
+
 <script>
+
 
 const fileInput = document.getElementById("fileInput");
 const wordsGrid = document.getElementById("wordsGrid");
@@ -222,17 +228,21 @@ const difficultList = document.getElementById("difficultList");
 const nextButton = document.getElementById("nextButton");
 const status = document.getElementById("status");
 
+
 let remainingWords = JSON.parse(
     localStorage.getItem("remainingWords")
 ) || [];
+
 
 let difficultWords = JSON.parse(
     localStorage.getItem("difficultWords")
 ) || [];
 
+
 let currentWords = JSON.parse(
     localStorage.getItem("currentWords")
 ) || [];
+
 
 
 /* Fisher-Yates Shuffle */
@@ -247,10 +257,13 @@ function shuffle(array) {
 
         [newArray[i], newArray[j]] =
             [newArray[j], newArray[i]];
+
     }
 
     return newArray;
+
 }
+
 
 
 /* Import TXT file */
@@ -261,16 +274,20 @@ fileInput.addEventListener("change", function(event) {
 
     if (!file) return;
 
+
     const reader = new FileReader();
+
 
     reader.onload = function(e) {
 
         const text = e.target.result;
 
+
         const words = text
             .split(/\r?\n/)
             .map(word => word.trim())
             .filter(word => word.length > 0);
+
 
         remainingWords = shuffle(words);
 
@@ -278,29 +295,36 @@ fileInput.addEventListener("change", function(event) {
 
         difficultWords = [];
 
+
         localStorage.setItem(
             "remainingWords",
             JSON.stringify(remainingWords)
         );
+
 
         localStorage.setItem(
             "currentWords",
             JSON.stringify(currentWords)
         );
 
+
         localStorage.setItem(
             "difficultWords",
             JSON.stringify(difficultWords)
         );
 
+
         showNextSix();
 
         renderDifficultWords();
+
     };
+
 
     reader.readAsText(file);
 
 });
+
 
 
 /* Show next 6 words */
@@ -315,16 +339,20 @@ function showNextSix() {
             </div>
         `;
 
+
         currentWords = [];
+
 
         localStorage.setItem(
             "currentWords",
             JSON.stringify(currentWords)
         );
 
+
         updateStatus();
 
         return;
+
     }
 
 
@@ -336,6 +364,7 @@ function showNextSix() {
         JSON.stringify(remainingWords)
     );
 
+
     localStorage.setItem(
         "currentWords",
         JSON.stringify(currentWords)
@@ -345,7 +374,9 @@ function showNextSix() {
     renderCurrentWords();
 
     updateStatus();
+
 }
+
 
 
 /* Render current words */
@@ -353,6 +384,7 @@ function showNextSix() {
 function renderCurrentWords() {
 
     wordsGrid.innerHTML = "";
+
 
     if (currentWords.length === 0) {
 
@@ -363,6 +395,7 @@ function renderCurrentWords() {
         `;
 
         return;
+
     }
 
 
@@ -372,18 +405,20 @@ function renderCurrentWords() {
 
         card.className = "word-card";
 
+
         if (difficultWords.includes(word)) {
             card.classList.add("selected");
         }
+
 
         card.textContent = word;
 
 
         card.addEventListener("click", function() {
 
-            toggleDifficultWord(word);
+            addDifficultWord(word);
 
-            card.classList.toggle("selected");
+            card.classList.add("selected");
 
         });
 
@@ -395,31 +430,30 @@ function renderCurrentWords() {
 }
 
 
-/* Add / remove difficult word */
 
-function toggleDifficultWord(word) {
+/* Add difficult word permanently */
 
-    if (difficultWords.includes(word)) {
+function addDifficultWord(word) {
 
-        difficultWords =
-            difficultWords.filter(item => item !== word);
+    /* Prevent duplicates */
 
-    } else {
+    if (!difficultWords.includes(word)) {
 
         difficultWords.push(word);
 
+
+        localStorage.setItem(
+            "difficultWords",
+            JSON.stringify(difficultWords)
+        );
+
+
+        renderDifficultWords();
+
     }
 
-
-    localStorage.setItem(
-        "difficultWords",
-        JSON.stringify(difficultWords)
-    );
-
-
-    renderDifficultWords();
-
 }
+
 
 
 /* Render difficult words */
@@ -451,30 +485,15 @@ function renderDifficultWords() {
         item.textContent = word;
 
 
-        item.addEventListener("click", function() {
-
-            difficultWords =
-                difficultWords.filter(item => item !== word);
-
-
-            localStorage.setItem(
-                "difficultWords",
-                JSON.stringify(difficultWords)
-            );
-
-
-            renderDifficultWords();
-
-            renderCurrentWords();
-
-        });
-
+        /* No click event here.
+           Difficult Words cannot be removed by tapping. */
 
         difficultList.appendChild(item);
 
     });
 
 }
+
 
 
 /* Status */
@@ -496,6 +515,7 @@ function updateStatus() {
 }
 
 
+
 /* Next button */
 
 nextButton.addEventListener("click", function() {
@@ -505,6 +525,7 @@ nextButton.addEventListener("click", function() {
 });
 
 
+
 /* Load saved data when the website opens */
 
 renderCurrentWords();
@@ -512,6 +533,7 @@ renderCurrentWords();
 renderDifficultWords();
 
 updateStatus();
+
 
 </script>
 
