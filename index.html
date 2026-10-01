@@ -141,6 +141,53 @@
         padding-bottom: 30px;
     }
 
+
+    /* =========================
+       Page Navigation
+       ========================= */
+
+    .page-navigation {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 10px auto 25px;
+    }
+
+    .page-button {
+        border: none;
+        background: #ddd;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .page-button.active {
+        background: #222;
+        color: white;
+    }
+
+
+    /* =========================
+       Page Name
+       ========================= */
+
+    .page-name-section {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .page-name-input {
+        width: min(500px, 90%);
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+        text-align: center;
+    }
+
+
     @media (max-width: 600px) {
 
         .words-grid {
@@ -161,7 +208,9 @@
 
 <header>
 
-    <h1>Vocabulary Randomizer</h1>
+    <h1 id="pageTitle">
+        Vocabulary Randomizer
+    </h1>
 
     <div class="subtitle">
         Six random words at a time. Words will not appear again once shown.
@@ -171,6 +220,25 @@
 
 
 <div class="container">
+
+
+    <!-- Page Navigation -->
+
+    <div class="page-navigation" id="pageNavigation"></div>
+
+
+    <!-- Page Name -->
+
+    <div class="page-name-section">
+
+        <input
+            type="text"
+            id="pageNameInput"
+            class="page-name-input"
+            placeholder="Page name"
+        >
+
+    </div>
 
 
     <!-- Status -->
@@ -223,7 +291,11 @@
             Import Vocabulary File
         </label>
 
-        <input type="file" id="fileInput" accept=".txt">
+        <input
+            type="file"
+            id="fileInput"
+            accept=".txt"
+        >
 
         <div class="hint">
             Importing a new file will replace your current vocabulary.
@@ -238,43 +310,235 @@
 <script>
 
 
-/* Elements */
+/* =========================================================
+   Page System
+   ========================================================= */
 
-const fileInput = document.getElementById("fileInput");
-const wordsGrid = document.getElementById("wordsGrid");
-const difficultList = document.getElementById("difficultList");
-const nextButton = document.getElementById("nextButton");
-const status = document.getElementById("status");
+const TOTAL_PAGES = 5;
 
-
-/* Load saved data */
-
-let remainingWords = JSON.parse(
-    localStorage.getItem("remainingWords")
-) || [];
-
-let difficultWords = JSON.parse(
-    localStorage.getItem("difficultWords")
-) || [];
-
-let currentWords = JSON.parse(
-    localStorage.getItem("currentWords")
-) || [];
+let currentPage =
+    Number(localStorage.getItem("vocabularyCurrentPage")) || 1;
 
 
+/* Page names */
 
-/* Fisher-Yates Shuffle */
+let pageNames =
+    JSON.parse(localStorage.getItem("vocabularyPageNames")) || {};
+
+
+/* Default page names */
+
+for (let i = 1; i <= TOTAL_PAGES; i++) {
+
+    if (!pageNames[i]) {
+
+        pageNames[i] =
+            i === 1
+                ? "Vocabulary Randomizer"
+                : `Vocabulary Page ${i}`;
+
+    }
+
+}
+
+localStorage.setItem(
+    "vocabularyPageNames",
+    JSON.stringify(pageNames)
+);
+
+
+
+/* =========================================================
+   Old Data Migration
+   ========================================================= */
+
+/*
+   Your existing version used:
+
+   remainingWords
+   currentWords
+   difficultWords
+
+   These are moved to Page 1 only once.
+*/
+
+function migrateOldData() {
+
+    const migrationKey =
+        "vocabularyOldDataMigrated";
+
+    if (
+        localStorage.getItem(migrationKey) === "true"
+    ) {
+        return;
+    }
+
+
+    const oldRemaining =
+        localStorage.getItem("remainingWords");
+
+    const oldCurrent =
+        localStorage.getItem("currentWords");
+
+    const oldDifficult =
+        localStorage.getItem("difficultWords");
+
+
+    /*
+       Only migrate if old data actually exists.
+    */
+
+    if (
+        oldRemaining !== null ||
+        oldCurrent !== null ||
+        oldDifficult !== null
+    ) {
+
+        if (oldRemaining !== null) {
+
+            localStorage.setItem(
+                "vocabularyPage1_remainingWords",
+                oldRemaining
+            );
+
+        }
+
+        if (oldCurrent !== null) {
+
+            localStorage.setItem(
+                "vocabularyPage1_currentWords",
+                oldCurrent
+            );
+
+        }
+
+        if (oldDifficult !== null) {
+
+            localStorage.setItem(
+                "vocabularyPage1_difficultWords",
+                oldDifficult
+            );
+
+        }
+
+    }
+
+
+    localStorage.setItem(
+        migrationKey,
+        "true"
+    );
+
+}
+
+migrateOldData();
+
+
+
+/* =========================================================
+   Page-specific Storage
+   ========================================================= */
+
+function storageKey(type) {
+
+    return `vocabularyPage${currentPage}_${type}`;
+
+}
+
+
+function loadPageData() {
+
+    remainingWords = JSON.parse(
+        localStorage.getItem(
+            storageKey("remainingWords")
+        )
+    ) || [];
+
+
+    currentWords = JSON.parse(
+        localStorage.getItem(
+            storageKey("currentWords")
+        )
+    ) || [];
+
+
+    difficultWords = JSON.parse(
+        localStorage.getItem(
+            storageKey("difficultWords")
+        )
+    ) || [];
+
+}
+
+
+
+/* =========================================================
+   Elements
+   ========================================================= */
+
+const fileInput =
+    document.getElementById("fileInput");
+
+const wordsGrid =
+    document.getElementById("wordsGrid");
+
+const difficultList =
+    document.getElementById("difficultList");
+
+const nextButton =
+    document.getElementById("nextButton");
+
+const status =
+    document.getElementById("status");
+
+const pageTitle =
+    document.getElementById("pageTitle");
+
+const pageNameInput =
+    document.getElementById("pageNameInput");
+
+const pageNavigation =
+    document.getElementById("pageNavigation");
+
+
+
+/* =========================================================
+   Data
+   ========================================================= */
+
+let remainingWords = [];
+
+let difficultWords = [];
+
+let currentWords = [];
+
+
+
+/* =========================================================
+   Fisher-Yates Shuffle
+   ========================================================= */
 
 function shuffle(array) {
 
     const newArray = [...array];
 
-    for (let i = newArray.length - 1; i > 0; i--) {
+    for (
+        let i = newArray.length - 1;
+        i > 0;
+        i--
+    ) {
 
-        const j = Math.floor(Math.random() * (i + 1));
+        const j =
+            Math.floor(Math.random() * (i + 1));
 
-        [newArray[i], newArray[j]] =
-            [newArray[j], newArray[i]];
+        [
+            newArray[i],
+            newArray[j]
+        ] =
+        [
+            newArray[j],
+            newArray[i]
+        ];
 
     }
 
@@ -284,78 +548,248 @@ function shuffle(array) {
 
 
 
-/* Import TXT File */
+/* =========================================================
+   Save Current Page
+   ========================================================= */
 
-fileInput.addEventListener("change", function(event) {
+function savePageData() {
 
-    const file = event.target.files[0];
+    localStorage.setItem(
+        storageKey("remainingWords"),
+        JSON.stringify(remainingWords)
+    );
 
-    if (!file) return;
+    localStorage.setItem(
+        storageKey("currentWords"),
+        JSON.stringify(currentWords)
+    );
 
+    localStorage.setItem(
+        storageKey("difficultWords"),
+        JSON.stringify(difficultWords)
+    );
 
-    const reader = new FileReader();
-
-
-    reader.onload = function(e) {
-
-        const text = e.target.result;
-
-
-        const words = text
-            .split(/\r?\n/)
-            .map(word => word.trim())
-            .filter(word => word.length > 0);
-
-
-        /* Shuffle the imported words */
-
-        remainingWords = shuffle(words);
+}
 
 
-        /* Start with no current words */
 
-        currentWords = [];
+/* =========================================================
+   Page Navigation
+   ========================================================= */
+
+function renderPageNavigation() {
+
+    pageNavigation.innerHTML = "";
 
 
-        /* New file = new Difficult Words list */
+    for (
+        let i = 1;
+        i <= TOTAL_PAGES;
+        i++
+    ) {
 
-        difficultWords = [];
+        const button =
+            document.createElement("button");
+
+        button.className = "page-button";
+
+        if (i === currentPage) {
+
+            button.classList.add("active");
+
+        }
 
 
-        /* Save everything */
+        button.textContent =
+            pageNames[i];
 
-        localStorage.setItem(
-            "remainingWords",
-            JSON.stringify(remainingWords)
+
+        button.addEventListener(
+            "click",
+            function() {
+
+                switchPage(i);
+
+            }
         );
 
-        localStorage.setItem(
-            "currentWords",
-            JSON.stringify(currentWords)
-        );
+
+        pageNavigation.appendChild(button);
+
+    }
+
+}
+
+
+
+/* =========================================================
+   Switch Page
+   ========================================================= */
+
+function switchPage(page) {
+
+    currentPage = page;
+
+
+    localStorage.setItem(
+        "vocabularyCurrentPage",
+        currentPage
+    );
+
+
+    loadPageData();
+
+
+    pageNameInput.value =
+        pageNames[currentPage];
+
+
+    pageTitle.textContent =
+        pageNames[currentPage];
+
+
+    renderPageNavigation();
+
+    renderCurrentWords();
+
+    renderDifficultWords();
+
+    updateStatus();
+
+}
+
+
+
+/* =========================================================
+   Page Name
+   ========================================================= */
+
+pageNameInput.addEventListener(
+    "input",
+    function() {
+
+        let name =
+            pageNameInput.value.trim();
+
+
+        /*
+           Empty name is allowed while editing,
+           but the page keeps a default name.
+        */
+
+        if (name === "") {
+
+            name =
+                `Vocabulary Page ${currentPage}`;
+
+        }
+
+
+        pageNames[currentPage] =
+            name;
+
 
         localStorage.setItem(
-            "difficultWords",
-            JSON.stringify(difficultWords)
+            "vocabularyPageNames",
+            JSON.stringify(pageNames)
         );
 
 
-        /* Show the first 6 */
-
-        showNextSix();
-
-        renderDifficultWords();
-
-    };
+        pageTitle.textContent =
+            name;
 
 
-    reader.readAsText(file);
+        renderPageNavigation();
 
-});
+    }
+);
 
 
 
-/* Show Next 6 */
+/* =========================================================
+   Import TXT File
+   ========================================================= */
+
+fileInput.addEventListener(
+    "change",
+    function(event) {
+
+        const file =
+            event.target.files[0];
+
+        if (!file) return;
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function(e) {
+
+                const text =
+                    e.target.result;
+
+
+                const words =
+                    text
+                        .split(/\r?\n/)
+                        .map(
+                            word => word.trim()
+                        )
+                        .filter(
+                            word =>
+                                word.length > 0
+                        );
+
+
+                /*
+                   Same behavior as original:
+                   shuffle imported words.
+                */
+
+                remainingWords =
+                    shuffle(words);
+
+
+                /*
+                   Start with no current words.
+                */
+
+                currentWords = [];
+
+
+                /*
+                   New file = new Difficult Words list.
+                */
+
+                difficultWords = [];
+
+
+                savePageData();
+
+
+                /*
+                   Show the first 6.
+                */
+
+                showNextSix();
+
+                renderDifficultWords();
+
+            };
+
+
+        reader.readAsText(file);
+
+    }
+);
+
+
+
+/* =========================================================
+   Show Next 6
+   ========================================================= */
 
 function showNextSix() {
 
@@ -364,10 +798,7 @@ function showNextSix() {
         currentWords = [];
 
 
-        localStorage.setItem(
-            "currentWords",
-            JSON.stringify(currentWords)
-        );
+        savePageData();
 
 
         wordsGrid.innerHTML = `
@@ -384,22 +815,19 @@ function showNextSix() {
     }
 
 
-    /* Take up to 6 words */
+    /*
+       Take up to 6 words.
+    */
 
-    currentWords = remainingWords.splice(0, 6);
+    currentWords =
+        remainingWords.splice(0, 6);
 
 
-    /* Save progress */
+    /*
+       Save progress.
+    */
 
-    localStorage.setItem(
-        "remainingWords",
-        JSON.stringify(remainingWords)
-    );
-
-    localStorage.setItem(
-        "currentWords",
-        JSON.stringify(currentWords)
-    );
+    savePageData();
 
 
     renderCurrentWords();
@@ -410,7 +838,9 @@ function showNextSix() {
 
 
 
-/* Render Current Words */
+/* =========================================================
+   Render Current Words
+   ========================================================= */
 
 function renderCurrentWords() {
 
@@ -430,68 +860,85 @@ function renderCurrentWords() {
     }
 
 
-    currentWords.forEach(word => {
+    currentWords.forEach(
+        word => {
 
-        const card = document.createElement("div");
+            const card =
+                document.createElement("div");
 
-        card.className = "word-card";
+
+            card.className =
+                "word-card";
 
 
-        /* Show selected state */
+            /*
+               Show selected state.
+            */
 
-        if (difficultWords.includes(word)) {
-            card.classList.add("selected");
+            if (
+                difficultWords.includes(word)
+            ) {
+
+                card.classList.add(
+                    "selected"
+                );
+
+            }
+
+
+            card.textContent = word;
+
+
+            /*
+               Main cards can be toggled ON / OFF.
+            */
+
+            card.addEventListener(
+                "click",
+                function() {
+
+                    toggleDifficultWord(word);
+
+                    card.classList.toggle(
+                        "selected"
+                    );
+
+                }
+            );
+
+
+            wordsGrid.appendChild(card);
+
         }
-
-
-        card.textContent = word;
-
-
-        /* Main cards can be toggled ON / OFF */
-
-        card.addEventListener("click", function() {
-
-            toggleDifficultWord(word);
-
-            card.classList.toggle("selected");
-
-        });
-
-
-        wordsGrid.appendChild(card);
-
-    });
+    );
 
 }
 
 
 
-/* Add or Remove Difficult Word */
+/* =========================================================
+   Add / Remove Difficult Word
+   ========================================================= */
 
 function toggleDifficultWord(word) {
 
-    if (difficultWords.includes(word)) {
-
-        /* OFF: remove from Difficult Words */
+    if (
+        difficultWords.includes(word)
+    ) {
 
         difficultWords =
-            difficultWords.filter(item => item !== word);
+            difficultWords.filter(
+                item => item !== word
+            );
 
     } else {
-
-        /* ON: add to Difficult Words */
 
         difficultWords.push(word);
 
     }
 
 
-    /* Save */
-
-    localStorage.setItem(
-        "difficultWords",
-        JSON.stringify(difficultWords)
-    );
+    savePageData();
 
 
     renderDifficultWords();
@@ -500,7 +947,9 @@ function toggleDifficultWord(word) {
 
 
 
-/* Render Difficult Words */
+/* =========================================================
+   Render Difficult Words
+   ========================================================= */
 
 function renderDifficultWords() {
 
@@ -520,32 +969,41 @@ function renderDifficultWords() {
     }
 
 
-    difficultWords.forEach(word => {
+    difficultWords.forEach(
+        word => {
 
-        const item = document.createElement("div");
-
-        item.className = "difficult-word";
-
-        item.textContent = word;
+            const item =
+                document.createElement("div");
 
 
-        /*
-        No click event.
-
-        The Difficult Words list itself
-        cannot be changed by tapping.
-        */
+            item.className =
+                "difficult-word";
 
 
-        difficultList.appendChild(item);
+            item.textContent =
+                word;
 
-    });
+
+            /*
+               No click event.
+
+               The Difficult Words list itself
+               cannot be changed by tapping.
+            */
+
+
+            difficultList.appendChild(item);
+
+        }
+    );
 
 }
 
 
 
-/* Update Status */
+/* =========================================================
+   Update Status
+   ========================================================= */
 
 function updateStatus() {
 
@@ -554,7 +1012,8 @@ function updateStatus() {
         currentWords.length === 0
     ) {
 
-        status.textContent = "No vocabulary file loaded.";
+        status.textContent =
+            "No vocabulary file loaded.";
 
         return;
 
@@ -568,17 +1027,34 @@ function updateStatus() {
 
 
 
-/* Next Button */
+/* =========================================================
+   Next Button
+   ========================================================= */
 
-nextButton.addEventListener("click", function() {
+nextButton.addEventListener(
+    "click",
+    function() {
 
-    showNextSix();
+        showNextSix();
 
-});
+    }
+);
 
 
 
-/* Load Saved Data */
+/* =========================================================
+   Initial Load
+   ========================================================= */
+
+loadPageData();
+
+pageNameInput.value =
+    pageNames[currentPage];
+
+pageTitle.textContent =
+    pageNames[currentPage];
+
+renderPageNavigation();
 
 renderCurrentWords();
 
