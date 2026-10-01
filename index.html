@@ -175,7 +175,7 @@
 
     .page-name-section {
         text-align: center;
-        margin-bottom: 20px;
+        margin: 20px 0;
     }
 
     .page-name-input {
@@ -227,20 +227,6 @@
     <div class="page-navigation" id="pageNavigation"></div>
 
 
-    <!-- Page Name -->
-
-    <div class="page-name-section">
-
-        <input
-            type="text"
-            id="pageNameInput"
-            class="page-name-input"
-            placeholder="Page name"
-        >
-
-    </div>
-
-
     <!-- Status -->
 
     <div class="status" id="status">
@@ -283,6 +269,20 @@
     </div>
 
 
+    <!-- Page Name -->
+
+    <div class="page-name-section">
+
+        <input
+            type="text"
+            id="pageNameInput"
+            class="page-name-input"
+            placeholder="Page name"
+        >
+
+    </div>
+
+
     <!-- Import File at Bottom -->
 
     <div class="upload-section">
@@ -320,15 +320,22 @@ let currentPage =
     Number(localStorage.getItem("vocabularyCurrentPage")) || 1;
 
 
-/* Page names */
+
+/* =========================================================
+   Page Names
+   ========================================================= */
 
 let pageNames =
-    JSON.parse(localStorage.getItem("vocabularyPageNames")) || {};
+    JSON.parse(
+        localStorage.getItem("vocabularyPageNames")
+    ) || {};
 
 
-/* Default page names */
-
-for (let i = 1; i <= TOTAL_PAGES; i++) {
+for (
+    let i = 1;
+    i <= TOTAL_PAGES;
+    i++
+) {
 
     if (!pageNames[i]) {
 
@@ -341,6 +348,7 @@ for (let i = 1; i <= TOTAL_PAGES; i++) {
 
 }
 
+
 localStorage.setItem(
     "vocabularyPageNames",
     JSON.stringify(pageNames)
@@ -350,27 +358,30 @@ localStorage.setItem(
 
 /* =========================================================
    Old Data Migration
-   ========================================================= */
+   =========================================================
 
-/*
-   Your existing version used:
+   The original version used:
 
    remainingWords
    currentWords
    difficultWords
 
-   These are moved to Page 1 only once.
-*/
+   These are automatically transferred
+   to Page 1 once.
+   ========================================================= */
 
 function migrateOldData() {
 
     const migrationKey =
         "vocabularyOldDataMigrated";
 
+
     if (
         localStorage.getItem(migrationKey) === "true"
     ) {
+
         return;
+
     }
 
 
@@ -385,7 +396,7 @@ function migrateOldData() {
 
 
     /*
-       Only migrate if old data actually exists.
+       Only migrate if old data exists.
     */
 
     if (
@@ -403,6 +414,7 @@ function migrateOldData() {
 
         }
 
+
         if (oldCurrent !== null) {
 
             localStorage.setItem(
@@ -411,6 +423,7 @@ function migrateOldData() {
             );
 
         }
+
 
         if (oldDifficult !== null) {
 
@@ -431,6 +444,7 @@ function migrateOldData() {
 
 }
 
+
 migrateOldData();
 
 
@@ -441,32 +455,38 @@ migrateOldData();
 
 function storageKey(type) {
 
-    return `vocabularyPage${currentPage}_${type}`;
+    return (
+        `vocabularyPage${currentPage}_${type}`
+    );
 
 }
 
 
+
 function loadPageData() {
 
-    remainingWords = JSON.parse(
-        localStorage.getItem(
-            storageKey("remainingWords")
-        )
-    ) || [];
+    remainingWords =
+        JSON.parse(
+            localStorage.getItem(
+                storageKey("remainingWords")
+            )
+        ) || [];
 
 
-    currentWords = JSON.parse(
-        localStorage.getItem(
-            storageKey("currentWords")
-        )
-    ) || [];
+    currentWords =
+        JSON.parse(
+            localStorage.getItem(
+                storageKey("currentWords")
+            )
+        ) || [];
 
 
-    difficultWords = JSON.parse(
-        localStorage.getItem(
-            storageKey("difficultWords")
-        )
-    ) || [];
+    difficultWords =
+        JSON.parse(
+            localStorage.getItem(
+                storageKey("difficultWords")
+            )
+        ) || [];
 
 }
 
@@ -522,6 +542,7 @@ function shuffle(array) {
 
     const newArray = [...array];
 
+
     for (
         let i = newArray.length - 1;
         i > 0;
@@ -529,7 +550,10 @@ function shuffle(array) {
     ) {
 
         const j =
-            Math.floor(Math.random() * (i + 1));
+            Math.floor(
+                Math.random() * (i + 1)
+            );
+
 
         [
             newArray[i],
@@ -541,6 +565,7 @@ function shuffle(array) {
         ];
 
     }
+
 
     return newArray;
 
@@ -559,10 +584,12 @@ function savePageData() {
         JSON.stringify(remainingWords)
     );
 
+
     localStorage.setItem(
         storageKey("currentWords"),
         JSON.stringify(currentWords)
     );
+
 
     localStorage.setItem(
         storageKey("difficultWords"),
@@ -591,7 +618,10 @@ function renderPageNavigation() {
         const button =
             document.createElement("button");
 
-        button.className = "page-button";
+
+        button.className =
+            "page-button";
+
 
         if (i === currentPage) {
 
@@ -672,15 +702,12 @@ pageNameInput.addEventListener(
             pageNameInput.value.trim();
 
 
-        /*
-           Empty name is allowed while editing,
-           but the page keeps a default name.
-        */
-
         if (name === "") {
 
             name =
-                `Vocabulary Page ${currentPage}`;
+                currentPage === 1
+                    ? "Vocabulary Randomizer"
+                    : `Vocabulary Page ${currentPage}`;
 
         }
 
@@ -717,6 +744,7 @@ fileInput.addEventListener(
         const file =
             event.target.files[0];
 
+
         if (!file) return;
 
 
@@ -731,7 +759,11 @@ fileInput.addEventListener(
                     e.target.result;
 
 
-                const words =
+                /*
+                   Original line processing.
+                */
+
+                let words =
                     text
                         .split(/\r?\n/)
                         .map(
@@ -744,8 +776,70 @@ fileInput.addEventListener(
 
 
                 /*
-                   Same behavior as original:
-                   shuffle imported words.
+                   =========================================
+                   PAGE 2-5 ONLY
+                   =========================================
+
+                   Convert large spaces between the word
+                   and its meaning to exactly 5 half-width
+                   spaces.
+
+                   Example:
+
+                   regurgitate          repeat, reiterate
+
+                   becomes:
+
+                   regurgitate     repeat, reiterate
+
+                   Normal single spaces inside the word
+                   are preserved.
+
+                   Page 1 does NOT use this processing.
+                   =========================================
+                */
+
+                if (currentPage >= 2) {
+
+                    words =
+                        words.map(
+                            word => {
+
+                                /*
+                                   Find 2 or more whitespace
+                                   characters in a row.
+                                */
+
+                                const parts =
+                                    word.split(/\s{2,}/);
+
+
+                                if (
+                                    parts.length >= 2
+                                ) {
+
+                                    return (
+                                        parts[0].trim() +
+                                        "     " +
+                                        parts
+                                            .slice(1)
+                                            .join(" ")
+                                            .trim()
+                                    );
+
+                                }
+
+
+                                return word;
+
+                            }
+                        );
+
+                }
+
+
+                /*
+                   Shuffle imported words.
                 */
 
                 remainingWords =
@@ -760,11 +854,16 @@ fileInput.addEventListener(
 
 
                 /*
-                   New file = new Difficult Words list.
+                   New file =
+                   new Difficult Words list.
                 */
 
                 difficultWords = [];
 
+
+                /*
+                   Save everything.
+                */
 
                 savePageData();
 
@@ -793,7 +892,9 @@ fileInput.addEventListener(
 
 function showNextSix() {
 
-    if (remainingWords.length === 0) {
+    if (
+        remainingWords.length === 0
+    ) {
 
         currentWords = [];
 
@@ -809,6 +910,7 @@ function showNextSix() {
 
 
         updateStatus();
+
 
         return;
 
@@ -847,13 +949,16 @@ function renderCurrentWords() {
     wordsGrid.innerHTML = "";
 
 
-    if (currentWords.length === 0) {
+    if (
+        currentWords.length === 0
+    ) {
 
         wordsGrid.innerHTML = `
             <div class="empty">
                 Import a vocabulary file to begin.
             </div>
         `;
+
 
         return;
 
@@ -886,7 +991,8 @@ function renderCurrentWords() {
             }
 
 
-            card.textContent = word;
+            card.textContent =
+                word;
 
 
             /*
@@ -898,6 +1004,7 @@ function renderCurrentWords() {
                 function() {
 
                     toggleDifficultWord(word);
+
 
                     card.classList.toggle(
                         "selected"
@@ -926,6 +1033,11 @@ function toggleDifficultWord(word) {
         difficultWords.includes(word)
     ) {
 
+        /*
+           OFF:
+           Remove from Difficult Words.
+        */
+
         difficultWords =
             difficultWords.filter(
                 item => item !== word
@@ -933,10 +1045,19 @@ function toggleDifficultWord(word) {
 
     } else {
 
+        /*
+           ON:
+           Add to Difficult Words.
+        */
+
         difficultWords.push(word);
 
     }
 
+
+    /*
+       Save.
+    */
 
     savePageData();
 
@@ -956,13 +1077,16 @@ function renderDifficultWords() {
     difficultList.innerHTML = "";
 
 
-    if (difficultWords.length === 0) {
+    if (
+        difficultWords.length === 0
+    ) {
 
         difficultList.innerHTML = `
             <div class="empty">
                 No difficult words yet.
             </div>
         `;
+
 
         return;
 
@@ -991,7 +1115,6 @@ function renderDifficultWords() {
                cannot be changed by tapping.
             */
 
-
             difficultList.appendChild(item);
 
         }
@@ -1015,6 +1138,7 @@ function updateStatus() {
         status.textContent =
             "No vocabulary file loaded.";
 
+
         return;
 
     }
@@ -1029,41 +1153,4 @@ function updateStatus() {
 
 /* =========================================================
    Next Button
-   ========================================================= */
-
-nextButton.addEventListener(
-    "click",
-    function() {
-
-        showNextSix();
-
-    }
-);
-
-
-
-/* =========================================================
-   Initial Load
-   ========================================================= */
-
-loadPageData();
-
-pageNameInput.value =
-    pageNames[currentPage];
-
-pageTitle.textContent =
-    pageNames[currentPage];
-
-renderPageNavigation();
-
-renderCurrentWords();
-
-renderDifficultWords();
-
-updateStatus();
-
-
-</script>
-
-</body>
-</html>
+   =========================================
