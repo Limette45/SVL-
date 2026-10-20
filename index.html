@@ -4,305 +4,448 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vocabulary Randomizer</title>
+
 <style>
-* {
-    box-sizing: border-box;
-}
+    * {
+        box-sizing: border-box;
+    }
 
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background: #f5f5f5;
-    color: #222;
-}
-
-.container {
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-h1 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.page-navigation {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 20px;
-}
-
-.page-button {
-    padding: 10px 16px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: white;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.page-button.active {
-    background: #333;
-    color: white;
-    border-color: #333;
-}
-
-.page-name-input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 16px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 16px;
-}
-
-.controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 16px;
-}
-
-button,
-.file-label {
-    padding: 10px 16px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: white;
-    cursor: pointer;
-    font-size: 15px;
-}
-
-button:hover,
-.file-label:hover,
-.page-button:hover {
-    background: #eaeaea;
-}
-
-#fileInput {
-    display: none;
-}
-
-.status {
-    margin: 12px 0;
-    color: #555;
-}
-
-.words-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin: 20px 0;
-}
-
-.word-card {
-    padding: 16px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: white;
-    cursor: pointer;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    min-height: 60px;
-}
-
-.word-card.difficult {
-    background: #fff0f0;
-    border-color: #d88;
-}
-
-.section-title {
-    margin-top: 28px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #ccc;
-}
-
-.difficult-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.difficult-word {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-}
-
-.difficult-word span {
-    flex: 1;
-}
-
-.remove-button {
-    flex-shrink: 0;
-}
-
-@media (max-width: 600px) {
     body {
-        padding: 12px;
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        color: #222;
+    }
+
+    header {
+        text-align: center;
+        padding: 30px 20px 20px;
+    }
+
+    h1 {
+        margin: 0 0 10px;
+    }
+
+    .subtitle {
+        color: #666;
+    }
+
+    .container {
+        width: min(900px, 90%);
+        margin: auto;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .button {
+        border: none;
+        padding: 12px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 5px;
+    }
+
+    .primary {
+        background: #222;
+        color: white;
+    }
+
+    .button:hover {
+        opacity: .8;
+    }
+
+    .status {
+        text-align: center;
+        margin: 15px 0;
+        color: #666;
     }
 
     .words-grid {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .word-card {
+        background: white;
+        padding: 22px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        transition: transform .15s, background .15s;
+        word-break: break-word;
+        white-space: pre-wrap;
+    }
+
+    .word-card:hover {
+        transform: translateY(-3px);
+        background: #f0f0f0;
+    }
+
+    .word-card.selected {
+        background: #DFF3FF;
+    }
+
+    .next-section {
+        text-align: center;
+        margin: 30px 0;
+    }
+
+    .difficult-section {
+        margin-top: 40px;
+        padding-bottom: 20px;
+    }
+
+    .difficult-section h2 {
+        text-align: center;
+    }
+
+    .difficult-list {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        min-height: 60px;
+    }
+
+    .difficult-word {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        white-space: pre-wrap;
+    }
+
+    .difficult-word:last-child {
+        border-bottom: none;
+    }
+
+    .empty {
+        text-align: center;
+        color: #999;
+        padding: 15px;
+    }
+
+    .hint {
+        text-align: center;
+        font-size: 14px;
+        color: #777;
+        margin-top: 8px;
+    }
+
+    .upload-section {
+        text-align: center;
+        margin: 40px 0;
+        padding-bottom: 30px;
+    }
+
+    .page-navigation {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 10px auto 25px;
     }
 
     .page-button {
-        padding: 9px 12px;
+        border: none;
+        background: #ddd;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
     }
-}
+
+    .page-button.active {
+        background: #222;
+        color: white;
+    }
+
+    .page-name-section {
+        text-align: center;
+        margin: 40px 0 20px;
+    }
+
+    .page-name-input {
+        width: min(500px, 90%);
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+        text-align: center;
+    }
+
+    @media (max-width: 600px) {
+        .words-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .word-card {
+            font-size: 17px;
+        }
+    }
 </style>
 </head>
+
 <body>
+
+<header>
+    <h1 id="pageTitle">Vocabulary Randomizer</h1>
+
+    <div class="subtitle">
+        Six random words at a time. Words will not appear again once shown.
+    </div>
+</header>
+
 <div class="container">
-    <h1>Vocabulary Randomizer</h1>
 
-    <div id="pageNavigation" class="page-navigation"></div>
+    <div class="page-navigation" id="pageNavigation"></div>
 
-    <input
-        id="pageNameInput"
-        class="page-name-input"
-        type="text"
-        placeholder="Page name"
-    >
-
-    <div class="controls">
-        <label class="file-label" for="fileInput">Import Vocabulary File</label>
-        <input id="fileInput" type="file" accept=".txt,text/plain">
-        <button id="nextButton" type="button">Show Next 6</button>
+    <div class="status" id="status">
+        No vocabulary file loaded.
     </div>
 
-    <div id="status" class="status"></div>
-    <div id="wordsGrid" class="words-grid"></div>
+    <div class="words-grid" id="wordsGrid"></div>
 
-    <h2 class="section-title">Difficult Words</h2>
-    <div id="difficultList" class="difficult-list"></div>
+    <div class="next-section">
+        <button class="button primary" id="nextButton">
+            Show Next 6
+        </button>
+
+        <div class="hint">
+            Tap a word to add or remove it from Difficult Words.
+        </div>
+    </div>
+
+    <div class="difficult-section">
+        <h2>Difficult Words</h2>
+
+        <div class="hint">
+            Words in this list cannot be changed by tapping them here.
+        </div>
+
+        <div class="difficult-list" id="difficultList"></div>
+    </div>
+
+    <div class="page-name-section">
+        <input
+            type="text"
+            id="pageNameInput"
+            class="page-name-input"
+            placeholder="Page name"
+        >
+    </div>
+
+    <div class="upload-section">
+        <label for="fileInput" class="button primary">
+            Import Vocabulary File
+        </label>
+
+        <input
+            type="file"
+            id="fileInput"
+            accept=".txt"
+        >
+
+        <div class="hint">
+            Importing a new file will replace your current vocabulary.
+        </div>
+    </div>
+
 </div>
 
 <script>
+
 const TOTAL_PAGES = 7;
 
-let currentPage = Number(localStorage.getItem("vocabularyCurrentPage")) || 1;
-let pageNames = JSON.parse(localStorage.getItem("vocabularyPageNames")) || {};
+let currentPage =
+    Number(localStorage.getItem("vocabularyCurrentPage")) || 1;
+
+let pageNames =
+    JSON.parse(localStorage.getItem("vocabularyPageNames")) || {};
+
+for (let i = 1; i <= TOTAL_PAGES; i++) {
+    if (!pageNames[i]) {
+        pageNames[i] =
+            i === 1
+                ? "Vocabulary Randomizer"
+                : `Vocabulary Page ${i}`;
+    }
+}
+
+localStorage.setItem(
+    "vocabularyPageNames",
+    JSON.stringify(pageNames)
+);
+
+function migrateOldData() {
+    const migrationKey = "vocabularyOldDataMigrated";
+
+    if (localStorage.getItem(migrationKey) === "true") {
+        return;
+    }
+
+    const oldRemaining = localStorage.getItem("remainingWords");
+    const oldCurrent = localStorage.getItem("currentWords");
+    const oldDifficult = localStorage.getItem("difficultWords");
+
+    if (oldRemaining !== null) {
+        localStorage.setItem(
+            "vocabularyPage1_remainingWords",
+            oldRemaining
+        );
+    }
+
+    if (oldCurrent !== null) {
+        localStorage.setItem(
+            "vocabularyPage1_currentWords",
+            oldCurrent
+        );
+    }
+
+    if (oldDifficult !== null) {
+        localStorage.setItem(
+            "vocabularyPage1_difficultWords",
+            oldDifficult
+        );
+    }
+
+    localStorage.setItem(migrationKey, "true");
+}
+
+migrateOldData();
+
+const fileInput = document.getElementById("fileInput");
+const wordsGrid = document.getElementById("wordsGrid");
+const difficultList = document.getElementById("difficultList");
+const nextButton = document.getElementById("nextButton");
+const status = document.getElementById("status");
+const pageTitle = document.getElementById("pageTitle");
+const pageNameInput = document.getElementById("pageNameInput");
+const pageNavigation = document.getElementById("pageNavigation");
 
 let remainingWords = [];
-let currentWords = [];
 let difficultWords = [];
+let currentWords = [];
 
-function getStorageKey(type, page = currentPage) {
-    return `vocabularyPage${page}_${type}`;
+function storageKey(type) {
+    return `vocabularyPage${currentPage}_${type}`;
 }
 
-function saveCurrentPageData() {
-    localStorage.setItem(getStorageKey("remainingWords"), JSON.stringify(remainingWords));
-    localStorage.setItem(getStorageKey("currentWords"), JSON.stringify(currentWords));
-    localStorage.setItem(getStorageKey("difficultWords"), JSON.stringify(difficultWords));
+function loadPageData() {
+    remainingWords =
+        JSON.parse(
+            localStorage.getItem(storageKey("remainingWords"))
+        ) || [];
+
+    currentWords =
+        JSON.parse(
+            localStorage.getItem(storageKey("currentWords"))
+        ) || [];
+
+    difficultWords =
+        JSON.parse(
+            localStorage.getItem(storageKey("difficultWords"))
+        ) || [];
 }
 
-function loadCurrentPageData() {
-    remainingWords = JSON.parse(localStorage.getItem(getStorageKey("remainingWords"))) || [];
-    currentWords = JSON.parse(localStorage.getItem(getStorageKey("currentWords"))) || [];
-    difficultWords = JSON.parse(localStorage.getItem(getStorageKey("difficultWords"))) || [];
+function savePageData() {
+    localStorage.setItem(
+        storageKey("remainingWords"),
+        JSON.stringify(remainingWords)
+    );
 
+    localStorage.setItem(
+        storageKey("currentWords"),
+        JSON.stringify(currentWords)
+    );
+
+    localStorage.setItem(
+        storageKey("difficultWords"),
+        JSON.stringify(difficultWords)
+    );
+}
+
+function shuffle(array) {
+    const newArray = [...array];
+
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [newArray[i], newArray[j]] = [
+            newArray[j],
+            newArray[i]
+        ];
+    }
+
+    return newArray;
+}
+
+function renderPageNavigation() {
+    pageNavigation.innerHTML = "";
+
+    for (let i = 1; i <= TOTAL_PAGES; i++) {
+        const button = document.createElement("button");
+
+        button.className = "page-button";
+
+        if (i === currentPage) {
+            button.classList.add("active");
+        }
+
+        button.textContent = pageNames[i];
+
+        button.addEventListener("click", function () {
+            switchPage(i);
+        });
+
+        pageNavigation.appendChild(button);
+    }
+}
+
+function switchPage(page) {
+    currentPage = page;
+
+    localStorage.setItem(
+        "vocabularyCurrentPage",
+        currentPage
+    );
+
+    loadPageData();
+
+    pageNameInput.value = pageNames[currentPage];
+    pageTitle.textContent = pageNames[currentPage];
+
+    renderPageNavigation();
     renderCurrentWords();
     renderDifficultWords();
     updateStatus();
 }
 
-function migrateOldData() {
-    if (localStorage.getItem("vocabularyOldDataMigrated") === "true") {
-        return;
+pageNameInput.addEventListener("input", function () {
+    let name = pageNameInput.value.trim();
+
+    if (name === "") {
+        name =
+            currentPage === 1
+                ? "Vocabulary Randomizer"
+                : `Vocabulary Page ${currentPage}`;
     }
 
-    const oldRemainingWords = localStorage.getItem("remainingWords");
-    const oldCurrentWords = localStorage.getItem("currentWords");
-    const oldDifficultWords = localStorage.getItem("difficultWords");
+    pageNames[currentPage] = name;
 
-    if (oldRemainingWords !== null &&
-        localStorage.getItem(getStorageKey("remainingWords", 1)) === null) {
-        localStorage.setItem(getStorageKey("remainingWords", 1), oldRemainingWords);
-    }
+    localStorage.setItem(
+        "vocabularyPageNames",
+        JSON.stringify(pageNames)
+    );
 
-    if (oldCurrentWords !== null &&
-        localStorage.getItem(getStorageKey("currentWords", 1)) === null) {
-        localStorage.setItem(getStorageKey("currentWords", 1), oldCurrentWords);
-    }
-
-    if (oldDifficultWords !== null &&
-        localStorage.getItem(getStorageKey("difficultWords", 1)) === null) {
-        localStorage.setItem(getStorageKey("difficultWords", 1), oldDifficultWords);
-    }
-
-    localStorage.setItem("vocabularyOldDataMigrated", "true");
-}
-
-function savePageNames() {
-    localStorage.setItem("vocabularyPageNames", JSON.stringify(pageNames));
-}
-
-function renderPageNavigation() {
-    const navigation = document.getElementById("pageNavigation");
-    navigation.innerHTML = "";
-
-    for (let page = 1; page <= TOTAL_PAGES; page++) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "page-button";
-        button.textContent = pageNames[page] || `Page ${page}`;
-
-        if (page === currentPage) {
-            button.classList.add("active");
-        }
-
-        button.addEventListener("click", () => {
-            currentPage = page;
-            localStorage.setItem("vocabularyCurrentPage", String(currentPage));
-            renderPageNavigation();
-            document.getElementById("pageNameInput").value = pageNames[currentPage] || "";
-            loadCurrentPageData();
-        });
-
-        navigation.appendChild(button);
-    }
-
-    document.getElementById("pageNameInput").value = pageNames[currentPage] || "";
-}
-
-document.getElementById("pageNameInput").addEventListener("change", function () {
-    const name = this.value.trim();
-
-    if (name) {
-        pageNames[currentPage] = name;
-    } else {
-        delete pageNames[currentPage];
-    }
-
-    savePageNames();
+    pageTitle.textContent = name;
     renderPageNavigation();
 });
 
-function shuffle(array) {
-    const result = [...array];
-
-    for (let i = result.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [result[i], result[j]] = [result[j], result[i]];
-    }
-
-    return result;
-}
-
-document.getElementById("fileInput").addEventListener("change", function (event) {
+fileInput.addEventListener("change", function (event) {
     const file = event.target.files[0];
 
     if (!file) {
@@ -312,7 +455,9 @@ document.getElementById("fileInput").addEventListener("change", function (event)
     const reader = new FileReader();
 
     reader.onload = function (e) {
-        let words = e.target.result
+        const text = e.target.result;
+
+        let words = text
             .split(/\r?\n/)
             .map(word => word.trim())
             .filter(word => word.length > 0);
@@ -345,10 +490,9 @@ document.getElementById("fileInput").addEventListener("change", function (event)
         currentWords = [];
         difficultWords = [];
 
-        saveCurrentPageData();
+        savePageData();
         showNextSix();
         renderDifficultWords();
-        updateStatus();
 
         event.target.value = "";
     };
@@ -356,35 +500,52 @@ document.getElementById("fileInput").addEventListener("change", function (event)
     reader.readAsText(file);
 });
 
-document.getElementById("nextButton").addEventListener("click", showNextSix);
-
 function showNextSix() {
+    if (remainingWords.length === 0) {
+        currentWords = [];
+        savePageData();
+
+        wordsGrid.innerHTML =
+            `<div class="empty">No more words remaining.</div>`;
+
+        updateStatus();
+        return;
+    }
+
     currentWords = remainingWords.splice(0, 6);
 
-    saveCurrentPageData();
+    savePageData();
     renderCurrentWords();
     updateStatus();
 }
 
 function renderCurrentWords() {
-    const grid = document.getElementById("wordsGrid");
-    grid.innerHTML = "";
+    wordsGrid.innerHTML = "";
+
+    if (currentWords.length === 0) {
+        wordsGrid.innerHTML =
+            `<div class="empty">Import a vocabulary file to begin.</div>`;
+
+        return;
+    }
 
     currentWords.forEach(word => {
         const card = document.createElement("div");
+
         card.className = "word-card";
 
         if (difficultWords.includes(word)) {
-            card.classList.add("difficult");
+            card.classList.add("selected");
         }
 
         card.textContent = word;
 
-        card.addEventListener("click", () => {
+        card.addEventListener("click", function () {
             toggleDifficultWord(word);
+            card.classList.toggle("selected");
         });
 
-        grid.appendChild(card);
+        wordsGrid.appendChild(card);
     });
 }
 
@@ -395,48 +556,58 @@ function toggleDifficultWord(word) {
         difficultWords.push(word);
     }
 
-    saveCurrentPageData();
-    renderCurrentWords();
+    savePageData();
     renderDifficultWords();
 }
 
 function renderDifficultWords() {
-    const list = document.getElementById("difficultList");
-    list.innerHTML = "";
+    difficultList.innerHTML = "";
+
+    if (difficultWords.length === 0) {
+        difficultList.innerHTML =
+            `<div class="empty">No difficult words yet.</div>`;
+
+        return;
+    }
 
     difficultWords.forEach(word => {
         const item = document.createElement("div");
+
         item.className = "difficult-word";
+        item.textContent = word;
 
-        const text = document.createElement("span");
-        text.textContent = word;
-
-        const removeButton = document.createElement("button");
-        removeButton.type = "button";
-        removeButton.className = "remove-button";
-        removeButton.textContent = "Remove";
-
-        removeButton.addEventListener("click", () => {
-            difficultWords = difficultWords.filter(item => item !== word);
-            saveCurrentPageData();
-            renderCurrentWords();
-            renderDifficultWords();
-        });
-
-        item.appendChild(text);
-        item.appendChild(removeButton);
-        list.appendChild(item);
+        difficultList.appendChild(item);
     });
 }
 
 function updateStatus() {
-    document.getElementById("status").textContent =
-        `Remaining: ${remainingWords.length} | Showing: ${currentWords.length} | Difficult: ${difficultWords.length}`;
+    if (
+        remainingWords.length === 0 &&
+        currentWords.length === 0
+    ) {
+        status.textContent = "No vocabulary file loaded.";
+        return;
+    }
+
+    status.textContent =
+        `${remainingWords.length} words remaining`;
 }
 
-migrateOldData();
+nextButton.addEventListener("click", function () {
+    showNextSix();
+});
+
+loadPageData();
+
+pageNameInput.value = pageNames[currentPage];
+pageTitle.textContent = pageNames[currentPage];
+
 renderPageNavigation();
-loadCurrentPageData();
+renderCurrentWords();
+renderDifficultWords();
+updateStatus();
+
 </script>
+
 </body>
 </html>
