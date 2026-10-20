@@ -621,18 +621,15 @@ fileInput.addEventListener(
                 Page 1:
                 Completely unchanged.
 
-                Page 2–7:
+                Page 2–5:
                 Convert the separator between
                 word and definition to EXACTLY
                 five half-width spaces.
 
-                Example:
-
-                regurgitate                         repeat
-
-                becomes:
-
-                regurgitate     repeat
+                Page 6–7:
+                Convert the separator between
+                word and definition to EXACTLY
+                eight half-width spaces.
 
                 Normal spaces inside expressions
                 such as:
@@ -644,7 +641,7 @@ fileInput.addEventListener(
                 =====================================
                 */
 
-                if (currentPage >= 2) {
+                if (currentPage >= 2 && currentPage <= 5) {
 
                     words = words.map(
                         word => {
@@ -660,6 +657,32 @@ fileInput.addEventListener(
                                 return (
                                     match[1].trim() +
                                     "     " +
+                                    match[2].trim()
+                                );
+                            }
+
+
+                            return word;
+                        }
+                    );
+                }
+
+                if (currentPage >= 6 && currentPage <= 7) {
+
+                    words = words.map(
+                        word => {
+
+                            const match =
+                                word.match(
+                                    /^(.+?)\s{2,}(.+)$/
+                                );
+
+
+                            if (match) {
+
+                                return (
+                                    match[1].trim() +
+                                    "        " +
                                     match[2].trim()
                                 );
                             }
@@ -903,4 +926,4 @@ updateStatus();
 </script>
 
 </body>
-</html>
+   </html>
