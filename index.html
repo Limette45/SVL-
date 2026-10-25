@@ -182,6 +182,27 @@
         margin: 20px 0 10px;
     }
 
+    .mode-section {
+        text-align: center;
+        margin: 20px 0 10px;
+    }
+
+    .mode-button {
+        border: none;
+        padding: 12px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 5px;
+        background: #444;
+        color: white;
+        min-width: 160px;
+    }
+
+    .mode-button:hover {
+        opacity: .8;
+    }
+
     @media (max-width: 600px) {
         .words-grid {
             grid-template-columns: 1fr;
@@ -247,6 +268,15 @@
         <button class="button primary" id="downloadButton">
             Download Difficult Words
         </button>
+    </div>
+
+    <div class="mode-section">
+        <button class="mode-button" id="modeButton">
+            Mode: memo
+        </button>
+        <div class="hint">
+            memo: 5 spaces between word and meaning　/　book: 8 spaces before ( )
+        </div>
     </div>
 
     <div class="upload-section">
@@ -337,10 +367,25 @@ const pageTitle = document.getElementById("pageTitle");
 const pageNameInput = document.getElementById("pageNameInput");
 const pageNavigation = document.getElementById("pageNavigation");
 const downloadButton = document.getElementById("downloadButton");
+const modeButton = document.getElementById("modeButton");
 
 let remainingWords = [];
 let difficultWords = [];
 let currentWords = [];
+let pageModes = JSON.parse(localStorage.getItem("vocabularyPageModes")) || {};
+
+function getPageMode(page) {
+    if (pageModes[page] === "book" || pageModes[page] === "memo") {
+        return pageModes[page];
+    }
+    // default: memo for all pages (page 1 previously had no formatting)
+    return "memo";
+}
+
+function setPageMode(page, mode) {
+    pageModes[page] = mode;
+    localStorage.setItem("vocabularyPageModes", JSON.stringify(pageModes));
+}
 
 function storageKey(type) {
     return `vocabularyPage${currentPage}_${type}`;
@@ -395,6 +440,43 @@ function shuffle(array) {
     return newArray;
 }
 
+function formatWordForMode(word, mode) {
+    if (mode === "memo") {
+        const match = word.match(/^(.+?)\s{2,}(.+)$/);
+        if (match) {
+            return match[1].trim() + "     " + match[2].trim();
+        }
+        return word;
+    }
+
+    if (mode === "book") {
+        const match = word.match(/^(.+?)\s+\((.+)\)$/);
+        if (match) {
+            return match[1].trim() + "        (" + match[2].trim() + ")";
+        }
+        return word;
+    }
+
+    return word;
+}
+
+function applyModeToWords(words, mode) {
+    return words.map(word => formatWordForMode(word, mode));
+}
+
+function reformatAllWordsForCurrentMode() {
+    const mode = getPageMode(currentPage);
+    remainingWords = applyModeToWords(remainingWords, mode);
+    currentWords = applyModeToWords(currentWords, mode);
+    difficultWords = applyModeToWords(difficultWords, mode);
+    savePageData();
+}
+
+function updateModeButton() {
+    const mode = getPageMode(currentPage);
+    modeButton.textContent = "Mode: " + mode;
+}
+
 function renderPageNavigation() {
     pageNavigation.innerHTML = "";
 
@@ -430,6 +512,7 @@ function switchPage(page) {
     pageNameInput.value = pageNames[currentPage];
     pageTitle.textContent = pageNames[currentPage];
 
+    updateModeButton();
     renderPageNavigation();
     renderCurrentWords();
     renderDifficultWords();
@@ -474,29 +557,8 @@ fileInput.addEventListener("change", function (event) {
             .map(word => word.trim())
             .filter(word => word.length > 0);
 
-        if (currentPage >= 2 && currentPage <= 5) {
-            words = words.map(word => {
-                const match = word.match(/^(.+?)\s{2,}(.+)$/);
-
-                if (match) {
-                    return match[1].trim() + "     " + match[2].trim();
-                }
-
-                return word;
-            });
-        }
-
-        if (currentPage >= 6 && currentPage <= 7) {
-            words = words.map(word => {
-                const match = word.match(/^(.+?)\s+\((.+)\)$/);
-
-                if (match) {
-                    return match[1].trim() + "        (" + match[2].trim() + ")";
-                }
-
-                return word;
-            });
-        }
+        const mode = getPageMode(currentPage);
+        words = applyModeToWords(words, mode);
 
         remainingWords = shuffle(words);
         currentWords = [];
@@ -627,6 +689,16 @@ function downloadDifficultWords() {
     URL.revokeObjectURL(url);
 }
 
+modeButton.addEventListener("click", function () {
+    const currentMode = getPageMode(currentPage);
+    const newMode = currentMode === "memo" ? "book" : "memo";
+    setPageMode(currentPage, newMode);
+    updateModeButton();
+    reformatAllWordsForCurrentMode();
+    renderCurrentWords();
+    renderDifficultWords();
+});
+
 nextButton.addEventListener("click", function () {
     showNextSix();
 });
@@ -640,6 +712,7 @@ loadPageData();
 pageNameInput.value = pageNames[currentPage];
 pageTitle.textContent = pageNames[currentPage];
 
+updateModeButton();
 renderPageNavigation();
 renderCurrentWords();
 renderDifficultWords();
