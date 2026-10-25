@@ -177,6 +177,13 @@
         text-align: center;
     }
 
+    .daily-progress {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin: 18px 0 8px;
+    }
+
     .download-section {
         text-align: center;
         margin: 20px 0 10px;
@@ -264,9 +271,13 @@
         >
     </div>
 
+    <div class="daily-progress" id="dailyProgress">
+        Today: 0 / 200 words
+    </div>
+
     <div class="download-section">
         <button class="button primary" id="downloadButton">
-            📥Download Difficult Words
+            Download Difficult Words
         </button>
     </div>
 
@@ -275,13 +286,13 @@
             Mode: memo
         </button>
         <div class="hint">
-            memo: Keep Notes /　book: ()の整列用
+            memo: 5 spaces between word and meaning　/　book: 8 spaces before ( )
         </div>
     </div>
 
     <div class="upload-section">
         <label for="fileInput" class="button primary">
-            ❗Import Vocabulary File
+            Import Vocabulary File
         </label>
 
         <input
@@ -368,6 +379,7 @@ const pageNameInput = document.getElementById("pageNameInput");
 const pageNavigation = document.getElementById("pageNavigation");
 const downloadButton = document.getElementById("downloadButton");
 const modeButton = document.getElementById("modeButton");
+const dailyProgress = document.getElementById("dailyProgress");
 
 let remainingWords = [];
 let difficultWords = [];
@@ -574,6 +586,28 @@ fileInput.addEventListener("change", function (event) {
     reader.readAsText(file);
 });
 
+function getTodayKey() {
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    return `vocabularyDailyWords_${date}`;
+}
+
+function getTodayWordCount() {
+    return Number(localStorage.getItem(getTodayKey())) || 0;
+}
+
+function updateDailyProgress() {
+    const count = getTodayWordCount();
+    dailyProgress.textContent = count >= 200
+        ? `Today: ${count} / 200 words — Done!`
+        : `Today: ${count} / 200 words`;
+}
+
+function countShowNext() {
+    localStorage.setItem(getTodayKey(), String(getTodayWordCount() + 6));
+    updateDailyProgress();
+}
+
 function showNextSix() {
     if (remainingWords.length === 0) {
         currentWords = [];
@@ -700,6 +734,9 @@ modeButton.addEventListener("click", function () {
 });
 
 nextButton.addEventListener("click", function () {
+    if (remainingWords.length > 0) {
+        countShowNext();
+    }
     showNextSix();
 });
 
@@ -717,6 +754,7 @@ renderPageNavigation();
 renderCurrentWords();
 renderDifficultWords();
 updateStatus();
+updateDailyProgress();
 
 </script>
 
