@@ -247,7 +247,7 @@
 
     <div class="status" id="status">
         <span id="remainingStatus">No vocabulary file loaded.</span>
-        <span class="status-separator">/</span>
+        <span class="status-separator"> : </span>
         <span id="dailyProgress">Today: 0 / 200</span>
     </div>
 
@@ -284,7 +284,7 @@
 
     <div class="download-section">
         <button class="button primary" id="downloadButton">
-            Download Difficult Words
+            📥 Download Difficult Words
         </button>
     </div>
 
@@ -299,7 +299,7 @@
 
     <div class="upload-section">
         <label for="fileInput" class="button primary">
-            Import Vocabulary File
+            ❗ Import Vocabulary File
         </label>
 
         <input
@@ -392,6 +392,7 @@ const dailyProgress = document.getElementById("dailyProgress");
 let remainingWords = [];
 let difficultWords = [];
 let currentWords = [];
+let totalWords = 0;
 let pageModes = JSON.parse(localStorage.getItem("vocabularyPageModes")) || {};
 
 function getPageMode(page) {
@@ -426,6 +427,14 @@ function loadPageData() {
         JSON.parse(
             localStorage.getItem(storageKey("difficultWords"))
         ) || [];
+
+    totalWords = Number(localStorage.getItem(storageKey("totalWords"))) || 0;
+
+    // For existing data without totalWords stored
+    if (totalWords === 0 && (remainingWords.length + currentWords.length > 0)) {
+        totalWords = remainingWords.length + currentWords.length;
+        localStorage.setItem(storageKey("totalWords"), String(totalWords));
+    }
 }
 
 function savePageData() {
@@ -442,6 +451,11 @@ function savePageData() {
     localStorage.setItem(
         storageKey("difficultWords"),
         JSON.stringify(difficultWords)
+    );
+
+    localStorage.setItem(
+        storageKey("totalWords"),
+        String(totalWords)
     );
 }
 
@@ -583,6 +597,7 @@ fileInput.addEventListener("change", function (event) {
         remainingWords = shuffle(words);
         currentWords = [];
         difficultWords = [];
+        totalWords = words.length;
 
         savePageData();
         showNextSix();
@@ -703,7 +718,7 @@ function updateStatus() {
     ) {
         remainingStatus.textContent = "No vocabulary file loaded.";
     } else {
-        remainingStatus.textContent = `${remainingWords.length} remaining`;
+        remainingStatus.textContent = `${remainingWords.length}/${totalWords} remaining`;
     }
     updateDailyProgress();
 }
