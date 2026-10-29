@@ -254,6 +254,9 @@
     <div class="words-grid" id="wordsGrid"></div>
 
     <div class="next-section">
+        <button class="button primary" id="hideButton">
+            Hide
+        </button>
         <button class="button primary" id="nextButton">
             Show Next 6
         </button>
@@ -380,6 +383,7 @@ const fileInput = document.getElementById("fileInput");
 const wordsGrid = document.getElementById("wordsGrid");
 const difficultList = document.getElementById("difficultList");
 const nextButton = document.getElementById("nextButton");
+const hideButton = document.getElementById("hideButton");
 const status = document.getElementById("status");
 const remainingStatus = document.getElementById("remainingStatus");
 const pageTitle = document.getElementById("pageTitle");
@@ -394,6 +398,7 @@ let difficultWords = [];
 let currentWords = [];
 let totalWords = 0;
 let pageModes = JSON.parse(localStorage.getItem("vocabularyPageModes")) || {};
+let hideTranslations = false;
 
 function getPageMode(page) {
     if (pageModes[page] === "book" || pageModes[page] === "memo") {
@@ -487,6 +492,26 @@ function formatWordForMode(word, mode) {
         const match = word.match(/^(.+?)\s+\((.+)\)$/);
         if (match) {
             return match[1].trim() + "        (" + match[2].trim() + ")";
+        }
+        return word;
+    }
+
+    return word;
+}
+
+function blankTranslation(word, mode) {
+    if (mode === "memo") {
+        const match = word.match(/^(.+?)\s{2,}(.+)$/);
+        if (match) {
+            return match[1].trim() + "     ";
+        }
+        return word;
+    }
+
+    if (mode === "book") {
+        const match = word.match(/^(.+?)\s+\((.+)\)$/);
+        if (match) {
+            return match[1].trim() + "        ()";
         }
         return word;
     }
@@ -660,6 +685,8 @@ function renderCurrentWords() {
         return;
     }
 
+    const mode = getPageMode(currentPage);
+
     currentWords.forEach(word => {
         const card = document.createElement("div");
 
@@ -669,7 +696,9 @@ function renderCurrentWords() {
             card.classList.add("selected");
         }
 
-        card.textContent = word;
+        card.textContent = hideTranslations
+            ? blankTranslation(word, mode)
+            : word;
 
         card.addEventListener("click", function () {
             toggleDifficultWord(word);
@@ -761,6 +790,32 @@ nextButton.addEventListener("click", function () {
     }
     showNextSix();
 });
+
+function startHideTranslations() {
+    if (hideTranslations) return;
+    hideTranslations = true;
+    hideButton.textContent = "Show";
+    renderCurrentWords();
+}
+
+function endHideTranslations() {
+    if (!hideTranslations) return;
+    hideTranslations = false;
+    hideButton.textContent = "Hide";
+    renderCurrentWords();
+}
+
+hideButton.addEventListener("mousedown", startHideTranslations);
+hideButton.addEventListener("mouseup", endHideTranslations);
+hideButton.addEventListener("mouseleave", endHideTranslations);
+
+hideButton.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    startHideTranslations();
+}, { passive: false });
+
+hideButton.addEventListener("touchend", endHideTranslations);
+hideButton.addEventListener("touchcancel", endHideTranslations);
 
 downloadButton.addEventListener("click", function () {
     downloadDifficultWords();
