@@ -396,6 +396,7 @@ const dailyProgress = document.getElementById("dailyProgress");
 let remainingWords = [];
 let difficultWords = [];
 let currentWords = [];
+let originalWords = [];
 let totalWords = 0;
 let pageModes = JSON.parse(localStorage.getItem("vocabularyPageModes")) || {};
 let hideTranslations = false;
@@ -433,6 +434,11 @@ function loadPageData() {
             localStorage.getItem(storageKey("difficultWords"))
         ) || [];
 
+    originalWords =
+        JSON.parse(
+            localStorage.getItem(storageKey("originalWords"))
+        ) || [];
+
     totalWords = Number(localStorage.getItem(storageKey("totalWords"))) || 0;
 
     // For existing data without totalWords stored
@@ -456,6 +462,11 @@ function savePageData() {
     localStorage.setItem(
         storageKey("difficultWords"),
         JSON.stringify(difficultWords)
+    );
+
+    localStorage.setItem(
+        storageKey("originalWords"),
+        JSON.stringify(originalWords)
     );
 
     localStorage.setItem(
@@ -528,6 +539,7 @@ function reformatAllWordsForCurrentMode() {
     remainingWords = applyModeToWords(remainingWords, mode);
     currentWords = applyModeToWords(currentWords, mode);
     difficultWords = applyModeToWords(difficultWords, mode);
+    originalWords = applyModeToWords(originalWords, mode);
     savePageData();
 }
 
@@ -622,6 +634,7 @@ fileInput.addEventListener("change", function (event) {
         remainingWords = shuffle(words);
         currentWords = [];
         difficultWords = [];
+        originalWords = [...words];
         totalWords = words.length;
 
         savePageData();
@@ -654,6 +667,25 @@ function updateDailyProgress() {
 function countShowNext() {
     localStorage.setItem(getTodayKey(), String(getTodayWordCount() + 6));
     updateDailyProgress();
+}
+
+function isRestartMode() {
+    return remainingWords.length === 0 && originalWords.length > 0;
+}
+
+function restartVocabulary() {
+    remainingWords = shuffle([...originalWords]);
+    currentWords = [];
+    savePageData();
+    showNextSix();
+}
+
+function updateNextButton() {
+    if (isRestartMode()) {
+        nextButton.textContent = "Restart";
+    } else {
+        nextButton.textContent = "Show Next 6";
+    }
 }
 
 function showNextSix() {
@@ -750,6 +782,7 @@ function updateStatus() {
         remainingStatus.textContent = `${remainingWords.length}/${totalWords} remaining`;
     }
     updateDailyProgress();
+    updateNextButton();
 }
 
 function downloadDifficultWords() {
@@ -785,10 +818,14 @@ modeButton.addEventListener("click", function () {
 });
 
 nextButton.addEventListener("click", function () {
-    if (remainingWords.length > 0) {
-        countShowNext();
+    if (isRestartMode()) {
+        restartVocabulary();
+    } else {
+        if (remainingWords.length > 0) {
+            countShowNext();
+        }
+        showNextSix();
     }
-    showNextSix();
 });
 
 function startHideTranslations() {
