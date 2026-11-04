@@ -400,6 +400,9 @@ let originalWords = [];
 let totalWords = 0;
 let pageModes = JSON.parse(localStorage.getItem("vocabularyPageModes")) || {};
 let hideTranslations = false;
+let hideLocked = false;
+let lastHidePressTime = 0;
+const DOUBLE_TAP_MS = 350;
 
 function getPageMode(page) {
     if (pageModes[page] === "book" || pageModes[page] === "memo") {
@@ -829,13 +832,41 @@ nextButton.addEventListener("click", function () {
 });
 
 function startHideTranslations() {
-    if (hideTranslations) return;
-    hideTranslations = true;
-    hideButton.textContent = "Show";
-    renderCurrentWords();
+    const now = Date.now();
+
+    // Locked state: one normal press unlocks and shows translations again
+    if (hideLocked) {
+        hideLocked = false;
+        hideTranslations = false;
+        hideButton.textContent = "Hide";
+        renderCurrentWords();
+        lastHidePressTime = 0;
+        return;
+    }
+
+    // Quick double press: lock hide so translations stay hidden after release
+    if (now - lastHidePressTime < DOUBLE_TAP_MS) {
+        hideLocked = true;
+        hideTranslations = true;
+        hideButton.textContent = "Show";
+        renderCurrentWords();
+        lastHidePressTime = 0;
+        return;
+    }
+
+    lastHidePressTime = now;
+
+    // Normal press: hide only while held
+    if (!hideTranslations) {
+        hideTranslations = true;
+        hideButton.textContent = "Show";
+        renderCurrentWords();
+    }
 }
 
 function endHideTranslations() {
+    // If locked by double-tap, stay hidden after release
+    if (hideLocked) return;
     if (!hideTranslations) return;
     hideTranslations = false;
     hideButton.textContent = "Hide";
