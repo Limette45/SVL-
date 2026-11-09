@@ -81,14 +81,14 @@
 
     .word-card {
         background: white;
-        padding: 22px;
+        padding: 16px 14px;
         border-radius: 12px;
-        cursor: pointer;
         font-size: 18px;
         box-shadow: 0 2px 8px rgba(0,0,0,.08);
         transition: transform .15s, background .15s;
-        word-break: break-word;
-        white-space: pre-wrap;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
     }
 
     .word-card:hover {
@@ -98,6 +98,38 @@
 
     .word-card.selected {
         background: #DFF3FF;
+    }
+
+    .word-text {
+        flex: 1;
+        min-width: 0;
+        cursor: pointer;
+        word-break: break-word;
+        white-space: pre-wrap;
+        padding: 4px 0;
+    }
+
+    .save-button {
+        flex-shrink: 0;
+        border: none;
+        background: #e8e8e8;
+        color: #555;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        line-height: 1.2;
+        white-space: nowrap;
+        transition: background .15s, color .15s;
+    }
+
+    .save-button:hover {
+        background: #ddd;
+    }
+
+    .save-button.saved {
+        background: #222;
+        color: white;
     }
 
     .next-section {
@@ -262,7 +294,7 @@
         </button>
 
         <div class="hint">
-            Tap a word to add or remove it from Difficult Words.
+            Tap a word to show or hide its translation. Use Save to mark difficult words.
         </div>
     </div>
 
@@ -403,6 +435,8 @@ let hideTranslations = false;
 let hideLocked = false;
 let lastHidePressTime = 0;
 const DOUBLE_TAP_MS = 350;
+// Per-word override: true = show translation even if global hide is on
+let individualShowOverrides = {};
 
 function getPageMode(page) {
     if (pageModes[page] === "book" || pageModes[page] === "memo") {
@@ -582,6 +616,7 @@ function switchPage(page) {
     );
 
     loadPageData();
+    individualShowOverrides = {};
 
     pageNameInput.value = pageNames[currentPage];
     pageTitle.textContent = pageNames[currentPage];
@@ -679,6 +714,7 @@ function isRestartMode() {
 function restartVocabulary() {
     remainingWords = shuffle([...originalWords]);
     currentWords = [];
+    individualShowOverrides = {};
     savePageData();
     showNextSix();
 }
@@ -694,6 +730,7 @@ function updateNextButton() {
 function showNextSix() {
     if (remainingWords.length === 0) {
         currentWords = [];
+        individualShowOverrides = {};
         savePageData();
 
         wordsGrid.innerHTML =
@@ -704,10 +741,23 @@ function showNextSix() {
     }
 
     currentWords = remainingWords.splice(0, 6);
+    individualShowOverrides = {};
 
     savePageData();
     renderCurrentWords();
     updateStatus();
+}
+
+function isWordTranslationVisible(word) {
+    // Individual override takes priority: if user tapped to show this word, show it
+    if (individualShowOverrides[word] === true) {
+        return true;
+    }
+    if (individualShowOverrides[word] === false) {
+        return false;
+    }
+    // Otherwise follow global hide state
+    return !hideTranslations;
 }
 
 function renderCurrentWords() {
@@ -724,22 +774,44 @@ function renderCurrentWords() {
 
     currentWords.forEach(word => {
         const card = document.createElement("div");
-
         card.className = "word-card";
 
         if (difficultWords.includes(word)) {
             card.classList.add("selected");
         }
 
-        card.textContent = hideTranslations
-            ? blankTranslation(word, mode)
-            : word;
+        const textEl = document.createElement("div");
+        textEl.className = "word-text";
+        textEl.textContent = isWordTranslationVisible(word)
+            ? word
+            : blankTranslation(word, mode);
 
-        card.addEventListener("click", function () {
-            toggleDifficultWord(word);
-            card.classList.toggle("selected");
+        textEl.addEventListener("click", function (e) {
+            e.stopPropagation();
+            // Toggle individual visibility for this word only
+            const currentlyVisible = isWordTranslationVisible(word);
+            individualShowOverrides[word] = !currentlyVisible;
+            renderCurrentWords();
         });
 
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "save-button";
+        const isSaved = difficultWords.includes(word);
+        if (isSaved) {
+            saveBtn.classList.add("saved");
+            saveBtn.textContent = "Done";
+        } else {
+            saveBtn.textContent = "Save";
+        }
+
+        saveBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            toggleDifficultWord(word);
+            renderCurrentWords();
+        });
+
+        card.appendChild(textEl);
+        card.appendChild(saveBtn);
         wordsGrid.appendChild(card);
     });
 }
@@ -816,6 +888,7 @@ modeButton.addEventListener("click", function () {
     setPageMode(currentPage, newMode);
     updateModeButton();
     reformatAllWordsForCurrentMode();
+    individualShowOverrides = {};
     renderCurrentWords();
     renderDifficultWords();
 });
@@ -838,6 +911,7 @@ function startHideTranslations() {
     if (hideLocked) {
         hideLocked = false;
         hideTranslations = false;
+        individualShowOverrides = {};
         hideButton.textContent = "Hide";
         renderCurrentWords();
         lastHidePressTime = 0;
@@ -848,6 +922,7 @@ function startHideTranslations() {
     if (now - lastHidePressTime < DOUBLE_TAP_MS) {
         hideLocked = true;
         hideTranslations = true;
+        individualShowOverrides = {};
         hideButton.textContent = "Show";
         renderCurrentWords();
         lastHidePressTime = 0;
@@ -859,6 +934,7 @@ function startHideTranslations() {
     // Normal press: hide only while held
     if (!hideTranslations) {
         hideTranslations = true;
+        individualShowOverrides = {};
         hideButton.textContent = "Show";
         renderCurrentWords();
     }
@@ -869,6 +945,7 @@ function endHideTranslations() {
     if (hideLocked) return;
     if (!hideTranslations) return;
     hideTranslations = false;
+    individualShowOverrides = {};
     hideButton.textContent = "Hide";
     renderCurrentWords();
 }
