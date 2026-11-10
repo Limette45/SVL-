@@ -87,7 +87,7 @@
         box-shadow: 0 2px 8px rgba(0,0,0,.08);
         transition: transform .15s, background .15s;
         display: flex;
-        align-items: center;
+        align-items: stretch;
         gap: 10px;
     }
 
@@ -111,27 +111,31 @@
 
     .save-button {
         flex-shrink: 0;
+        align-self: stretch;
         border: none;
-        background: #e8e8e8;
-        color: #555;
-        padding: 6px 10px;
-        height: 42px;
-        align-self: center;
+        background: transparent;
+        color: inherit;
+        margin-top: -12px;
+        margin-bottom: -12px;
+        padding: 0;
+        width: 36px;
         border-radius: 8px;
-        font-size: 13px;
+        font-size: 16px;
         cursor: pointer;
-        line-height: 1.2;
+        line-height: 1;
         white-space: nowrap;
-        transition: background .15s, color .15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .save-button:hover {
-        background: #ddd;
+        background: transparent;
+        opacity: 0.7;
     }
 
     .save-button.saved {
-        background: #222;
-        color: white;
+        background: transparent;
     }
 
     .next-section {
@@ -801,10 +805,8 @@ function renderCurrentWords() {
         const isSaved = difficultWords.includes(word);
         if (isSaved) {
             saveBtn.classList.add("saved");
-            saveBtn.textContent = "Done";
-        } else {
-            saveBtn.textContent = "Save";
         }
+        saveBtn.textContent = "✅";
 
         saveBtn.addEventListener("click", function (e) {
             e.stopPropagation();
