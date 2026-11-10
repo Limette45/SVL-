@@ -89,6 +89,7 @@
         display: flex;
         align-items: stretch;
         gap: 10px;
+        cursor: pointer;
     }
 
     .word-card:hover {
@@ -103,7 +104,6 @@
     .word-text {
         flex: 1;
         min-width: 0;
-        cursor: pointer;
         word-break: break-word;
         white-space: pre-wrap;
         padding: 4px 0;
@@ -793,14 +793,6 @@ function renderCurrentWords() {
             ? word
             : blankTranslation(word, mode);
 
-        textEl.addEventListener("click", function (e) {
-            e.stopPropagation();
-            // Toggle individual visibility for this word only
-            const currentlyVisible = isWordTranslationVisible(word);
-            individualShowOverrides[word] = !currentlyVisible;
-            renderCurrentWords();
-        });
-
         const saveBtn = document.createElement("button");
         saveBtn.className = "save-button";
         const isSaved = difficultWords.includes(word);
@@ -812,6 +804,13 @@ function renderCurrentWords() {
         saveBtn.addEventListener("click", function (e) {
             e.stopPropagation();
             toggleDifficultWord(word);
+            renderCurrentWords();
+        });
+
+        // 単語カード全体をタップで訳の表示切替
+        card.addEventListener("click", function () {
+            const currentlyVisible = isWordTranslationVisible(word);
+            individualShowOverrides[word] = !currentlyVisible;
             renderCurrentWords();
         });
 
