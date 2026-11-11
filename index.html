@@ -309,7 +309,7 @@
         <h2>Difficult Words</h2>
 
         <div class="hint">
-            Words in this list cannot be changed by tapping them here.
+            Tap a word to show or hide its translation. Same Hide button applies here.
         </div>
 
         <div class="difficult-list" id="difficultList"></div>
@@ -812,6 +812,7 @@ function renderCurrentWords() {
             const currentlyVisible = isWordTranslationVisible(word);
             individualShowOverrides[word] = !currentlyVisible;
             renderCurrentWords();
+            renderDifficultWords();
         });
 
         card.appendChild(textEl);
@@ -841,11 +842,24 @@ function renderDifficultWords() {
         return;
     }
 
+    const mode = getPageMode(currentPage);
+
     difficultWords.forEach(word => {
         const item = document.createElement("div");
 
         item.className = "difficult-word";
-        item.textContent = word;
+        item.style.cursor = "pointer";
+        item.textContent = isWordTranslationVisible(word)
+            ? word
+            : blankTranslation(word, mode);
+
+        item.addEventListener("click", function () {
+            const currentlyVisible = isWordTranslationVisible(word);
+            individualShowOverrides[word] = !currentlyVisible;
+            renderDifficultWords();
+            // Keep current words in sync if the same word is shown there
+            renderCurrentWords();
+        });
 
         difficultList.appendChild(item);
     });
@@ -918,6 +932,7 @@ function startHideTranslations() {
         individualShowOverrides = {};
         hideButton.textContent = "Hide";
         renderCurrentWords();
+        renderDifficultWords();
         lastHidePressTime = 0;
         return;
     }
@@ -929,6 +944,7 @@ function startHideTranslations() {
         individualShowOverrides = {};
         hideButton.textContent = "Show";
         renderCurrentWords();
+        renderDifficultWords();
         lastHidePressTime = 0;
         return;
     }
@@ -941,6 +957,7 @@ function startHideTranslations() {
         individualShowOverrides = {};
         hideButton.textContent = "Show";
         renderCurrentWords();
+        renderDifficultWords();
     }
 }
 
@@ -952,6 +969,7 @@ function endHideTranslations() {
     individualShowOverrides = {};
     hideButton.textContent = "Hide";
     renderCurrentWords();
+    renderDifficultWords();
 }
 
 hideButton.addEventListener("mousedown", startHideTranslations);
